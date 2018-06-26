@@ -2,12 +2,8 @@ package net.scala.nn.test
 
 import scala.collection.mutable.ListBuffer
 import java.io.DataInputStream
-
-import java.nio.file.Files
-
 import breeze.linalg.{DenseVector, DenseMatrix}
-
-import scala.io.Source
+import net.scala.nn.network
 
 /**
   * Created by wangmich on 06/26/2018.
@@ -55,4 +51,7 @@ object Mnist extends App {
 
   //println(images.toList)
   imageDataStream.close
+
+  val net = new network(List(784, 30, 10))
+  net.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, None)
 }
