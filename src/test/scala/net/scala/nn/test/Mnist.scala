@@ -14,7 +14,7 @@ object Mnist extends App {
                     "test" -> "train-images-idx3-ubyte",
                     "test-label" -> "train-labels-idx1-ubyte")
 
-  val stream = getClass.getResourceAsStream("/t10k-labels-idx1-ubyte")
+  val stream = getClass.getResourceAsStream("/train-labels-idx1-ubyte")
   val dataStream  = new DataInputStream(stream)
   val labels = ListBuffer.empty[DenseVector[Double]]
 
@@ -29,7 +29,7 @@ object Mnist extends App {
   println(labels.toList)
   dataStream.close()
 
-  val imageStream = getClass.getResourceAsStream("/t10k-images-idx3-ubyte")
+  val imageStream = getClass.getResourceAsStream("/train-images-idx3-ubyte")
   val imageDataStream  = new DataInputStream(imageStream)
   val images = ListBuffer.empty[DenseVector[Double]]
   println(imageDataStream.readInt())
@@ -52,6 +52,45 @@ object Mnist extends App {
   //println(images.toList)
   imageDataStream.close
 
+  val teststream = getClass.getResourceAsStream("/t10k-labels-idx1-ubyte")
+  val testdataStream  = new DataInputStream(teststream)
+  val testlabels = ListBuffer.empty[DenseVector[Double]]
+
+  println(testdataStream.readInt)
+  val testcount = testdataStream.readInt()
+  println(testcount)
+
+  for (c <- 0 until testcount) {
+    val label = testdataStream.readByte()
+    testlabels += DenseVector.tabulate[Double](10)({ i => if (i == label) 1.0 else 0.0 })
+  }
+  println(testlabels.toList)
+  testdataStream.close()
+
+  val testimageStream = getClass.getResourceAsStream("/t10k-images-idx3-ubyte")
+  val testimageDataStream  = new DataInputStream(testimageStream)
+  val testimages = ListBuffer.empty[DenseVector[Double]]
+  println(testimageDataStream.readInt())
+
+  val testimageCount = testimageDataStream.readInt()
+  val testheight = testimageDataStream.readInt()
+  val testwidth = testimageDataStream.readInt()
+
+  println(s"imageCount=${imageCount}, height=${testheight}, width=${testwidth}")
+
+  for (c <- 0 until testimageCount) {
+    val matrix = DenseMatrix.zeros[Int](testheight, testwidth)
+    for (r <- 0 until testheight; c <- 0 until testwidth) {
+      matrix(r, c) = testimageDataStream.readUnsignedByte()
+    }
+    //   println(matrix)
+    testimages += DenseVector.tabulate(testheight * testwidth)({ i => matrix(i / testwidth, i % testheight) / 255.0 })
+  }
+
+  //println(images.toList)
+  testimageDataStream.close
+
+
   val net = new network(List(784, 30, 10))
-  net.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, None)
+  net.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, Option(testimages.toList.zip(testlabels.toList)))
 }
