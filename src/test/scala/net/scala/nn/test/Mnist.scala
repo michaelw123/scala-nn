@@ -19,7 +19,7 @@ object Mnist extends App {
   val labels = ListBuffer.empty[DenseVector[Double]]
 
   println(dataStream.readInt)
-  val count = dataStream.readInt()
+  val count = dataStream.readInt() //skip  magic number
   println(count)
 
   for (c <- 0 until count) {
@@ -32,7 +32,7 @@ object Mnist extends App {
   val imageStream = getClass.getResourceAsStream("/train-images-idx3-ubyte")
   val imageDataStream  = new DataInputStream(imageStream)
   val images = ListBuffer.empty[DenseVector[Double]]
-  println(imageDataStream.readInt())
+  println(imageDataStream.readInt()) //skip magic number
 
   val imageCount = imageDataStream.readInt()
   val height = imageDataStream.readInt()
@@ -91,6 +91,6 @@ object Mnist extends App {
   testimageDataStream.close
 
 
-  val net = new network(List(784, 30, 10))
+  val net = new network(List(784, 40, 25, 10))
   net.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, Option(testimages.toList.zip(testlabels.toList)))
 }

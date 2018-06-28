@@ -3,7 +3,7 @@ package net.scala.nn
 /**
   * Created by Michael Wang on 06/25/2018.
   */
-import breeze.linalg.{DenseMatrix, DenseVector, argmax}
+import breeze.linalg.{DenseMatrix, DenseVector, argmax, sum}
 import breeze.stats.distributions.Rand
 import breeze.generic.{MappingUFunc, UFunc}
 import breeze.numerics.sigmoid
@@ -16,12 +16,16 @@ object sigmoidPrime extends UFunc with MappingUFunc {
   }
 
 }
+
  class network(private val sizes:List[Int]) {
    type NetworkVector = DenseVector[Double]
    type NetworkMatrix = DenseMatrix[Double]
    type TrainingSet = List[(NetworkVector, NetworkVector)]
 
-
+   trait costFunction {
+     def fn(a:NetworkVector, y:Double):NetworkVector
+     def delta(z:Double, a:Double, y:Double):Double
+   }
 
   private var biases:List[NetworkVector] = this.sizes
     .drop(1)
@@ -87,7 +91,7 @@ object sigmoidPrime extends UFunc with MappingUFunc {
 
      activations = x :: activations
 
-     var delta = costDerivative(activations.last, y) :* sigmoidPrime(zs.last)
+     var delta = costDerivative(activations.last, y) *:* sigmoidPrime(zs.last)
 
      newB(newB.length - 1) = delta
      newW(newW.length - 1) = delta * activations(activations.length - 2).t
@@ -95,7 +99,7 @@ object sigmoidPrime extends UFunc with MappingUFunc {
      for (l <- 2 until numLayers) {
        val z = zs(zs.length - l)
        val sp = sigmoidPrime(z)
-       delta = (weights(weights.length - l + 1).t * delta) :* sp
+       delta = (weights(weights.length - l + 1).t * delta) *:* sp
 
        newB(newB.length - l) = delta
        newW(newW.length - l) = delta * activations(activations.length - l - 1).t
@@ -120,3 +124,29 @@ object sigmoidPrime extends UFunc with MappingUFunc {
      result
    }
 }
+trait CrossEntropyCostNetwork extends network{
+   object crossEntropyCost extends costFunction {
+    def fn(a:NetworkVector, y:Double):Double = sum(a.map(x => -y * scala.math.log(x) - (1-y)*scala.math.log(1-x)))
+    def delta(z:Double, a:Double, y:Double):Double = (a-y)
+  }
+}
+trait QuadraticCostNetwork extends network {
+  object quadraticCost extends costFunction {
+    def fn(a:NetworkVector, y:Double):Double = 0.5 * scala.math.pow(breeze.linalg.norm(a), 2)
+    def delta(z:Double, a:Double, y:Double):Double = (a-y) * sigmoidPrime(z)
+  }
+
+}
+trait trainingCostMonitoring extends network {
+
+}
+trait trainingAccuracyMonitoring extends network {
+
+}
+trait evaluationCostMonitoring extends network {
+
+}
+trait evaluationAccuracyMonitoring extends network {
+
+}
+
