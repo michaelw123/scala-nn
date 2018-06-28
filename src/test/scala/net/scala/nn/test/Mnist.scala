@@ -2,8 +2,9 @@ package net.scala.nn.test
 
 import scala.collection.mutable.ListBuffer
 import java.io.DataInputStream
-import breeze.linalg.{DenseVector, DenseMatrix}
-import net.scala.nn.network
+
+import breeze.linalg.{DenseMatrix, DenseVector}
+import net.scala.nn.{CrossEntropyCostNetwork, network}
 
 /**
   * Created by wangmich on 06/26/2018.
@@ -91,6 +92,9 @@ object Mnist extends App {
   testimageDataStream.close
 
 
-  val net = new network(List(784, 40, 25, 10))
-  net.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, Option(testimages.toList.zip(testlabels.toList)))
+  //val net = new network(List(784, 40, 25, 10))
+  //net.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, Option(testimages.toList.zip(testlabels.toList)))
+
+  val net1 = new network(List(784, 40, 25, 10)) with CrossEntropyCostNetwork
+  net1.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, Option(testimages.toList.zip(testlabels.toList)))
 }

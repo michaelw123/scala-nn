@@ -27,16 +27,16 @@ object sigmoidPrime extends UFunc with MappingUFunc {
      def delta(z:Double, a:Double, y:Double):Double
    }
 
-  private var biases:List[NetworkVector] = this.sizes
+  protected var biases:List[NetworkVector] = this.sizes
     .drop(1)
     .map(n => DenseVector.rand(n, Rand.gaussian))
 
-   private var weights: List[NetworkMatrix] = this.sizes
+   protected var weights: List[NetworkMatrix] = this.sizes
      .drop(1)
      .zip(this.sizes.dropRight(1))
      .map({ case (r, c) => DenseMatrix.rand(r, c, Rand.gaussian) })
 
-   private val numLayers: Int = this.sizes.length
+   protected val numLayers: Int = this.sizes.length
 
    def SGD(trainingData: TrainingSet, epochs: Int, miniBatchSize: Int, eta: Double, testData: Option[TrainingSet]): Unit = {
 
@@ -47,7 +47,7 @@ object sigmoidPrime extends UFunc with MappingUFunc {
 
        val miniBatches = shuffledTrainingData.grouped(miniBatchSize).toList
 
-       miniBatches.foreach(b => updateMiniBatch(b, eta))
+       miniBatches.foreach(b => updateMiniBatch(b, eta, 5.0, trainingData.size))
 
        testData match {
          case Some(d) => println(s"Epoch $x: ${evaluate(d)} / ${d.length}")
@@ -55,7 +55,7 @@ object sigmoidPrime extends UFunc with MappingUFunc {
        }
      }
    }
-   def updateMiniBatch(batch: TrainingSet, eta: Double): Unit = {
+   def updateMiniBatch(batch: TrainingSet, eta: Double, lmbta:Double = 0.0, n:Int = 0): Unit = {
      var newB = biases.map(b => DenseVector.zeros[Double](b.length))
      var newW = weights.map(w => DenseMatrix.zeros[Double](w.rows, w.cols))
 
@@ -128,6 +128,57 @@ trait CrossEntropyCostNetwork extends network{
    object crossEntropyCost extends costFunction {
     def fn(a:NetworkVector, y:Double):Double = sum(a.map(x => -y * scala.math.log(x) - (1-y)*scala.math.log(1-x)))
     def delta(z:Double, a:Double, y:Double):Double = (a-y)
+  }
+  override def updateMiniBatch(batch: TrainingSet, eta: Double, lmbda:Double, n:Int): Unit = {
+    var newB = biases.map(b => DenseVector.zeros[Double](b.length))
+    var newW = weights.map(w => DenseMatrix.zeros[Double](w.rows, w.cols))
+
+    batch.foreach({
+      case (x, y) => {
+        val (deltaB, deltaW) = backprop(x, y)
+        newB = newB.zip(deltaB).map({ case (nb, db) => nb + db })
+        newW = newW.zip(deltaW).map({ case (nw, dw) => nw + dw })
+
+      }
+    })
+    biases = biases.zip(newB).map({ case (b, nb) => b - (eta / batch.length) * nb })
+    weights = weights.zip(newW).map({ case (w, nw) => w - (eta *(lmbda/n) / batch.length) * nw })
+  }
+  override def backprop(x: NetworkVector, y: NetworkVector): (List[NetworkVector], List[NetworkMatrix]) = {
+    val newB = biases.map(b => DenseVector.zeros[Double](b.length)).toArray
+    val newW = weights.map(w => DenseMatrix.zeros[Double](w.rows, w.cols)).toArray
+
+    var activation = x
+
+    var (zs, activations) = biases
+      .zip(weights)
+      .map({
+        case (b, w) => {
+          val z = w * activation + b
+          activation = sigmoid(z)
+
+          (z, activation)
+        }
+      })
+      .unzip
+
+    activations = x :: activations
+
+    var delta = costDerivative(activations.last, y) *:* sigmoidPrime(zs.last)
+
+    newB(newB.length - 1) = delta
+    newW(newW.length - 1) = delta * activations(activations.length - 2).t
+
+    for (l <- 2 until numLayers) {
+      val z = zs(zs.length - l)
+      val sp = sigmoidPrime(z)
+      delta = (weights(weights.length - l + 1).t * delta) *:* sp
+
+      newB(newB.length - l) = delta
+      newW(newW.length - l) = delta * activations(activations.length - l - 1).t
+    }
+
+    (newB.toList, newW.toList)
   }
 }
 trait QuadraticCostNetwork extends network {
