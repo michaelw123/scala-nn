@@ -23,7 +23,7 @@ object sigmoidPrime extends UFunc with MappingUFunc {
    type TrainingSet = List[(NetworkVector, NetworkVector)]
 
    trait costFunction {
-     def fn(a:NetworkVector, y:Double):NetworkVector
+     def fn(a:NetworkVector, y:Double):Double
      def delta(z:Double, a:Double, y:Double):Double
    }
 
@@ -126,8 +126,8 @@ object sigmoidPrime extends UFunc with MappingUFunc {
 }
 trait CrossEntropyCostNetwork extends network{
    object crossEntropyCost extends costFunction {
-    def fn(a:NetworkVector, y:Double):Double = sum(a.map(x => -y * scala.math.log(x) - (1-y)*scala.math.log(1-x)))
-    def delta(z:Double, a:Double, y:Double):Double = (a-y)
+     def fn(a:NetworkVector, y:Double):Double = sum(a.map(x => -y * scala.math.log(x) - (1-y)*scala.math.log(1-x)))
+     def delta(z:Double, a:Double, y:Double):Double = (a-y)
   }
   override def updateMiniBatch(batch: TrainingSet, eta: Double, lmbda:Double, n:Int): Unit = {
     var newB = biases.map(b => DenseVector.zeros[Double](b.length))
@@ -142,7 +142,7 @@ trait CrossEntropyCostNetwork extends network{
       }
     })
     biases = biases.zip(newB).map({ case (b, nb) => b - (eta / batch.length) * nb })
-    weights = weights.zip(newW).map({ case (w, nw) => w - (eta *(lmbda/n) / batch.length) * nw })
+    weights = weights.zip(newW).map({ case (w, nw) => (1-eta*(lmbda/n)) *w - (eta / batch.length) * nw })
   }
   override def backprop(x: NetworkVector, y: NetworkVector): (List[NetworkVector], List[NetworkMatrix]) = {
     val newB = biases.map(b => DenseVector.zeros[Double](b.length)).toArray
