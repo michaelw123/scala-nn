@@ -24,7 +24,7 @@ object sigmoidPrime extends UFunc with MappingUFunc {
 
    trait costFunction {
      def fn(a:NetworkVector, y:Double):Double
-     def delta(z:Double, a:Double, y:Double):Double
+     def delta(z:NetworkVector, a:NetworkVector, y:NetworkVector):NetworkVector
    }
 
   protected var biases:List[NetworkVector] = this.sizes
@@ -127,7 +127,7 @@ object sigmoidPrime extends UFunc with MappingUFunc {
 trait CrossEntropyCostNetwork extends network{
    object crossEntropyCost extends costFunction {
      def fn(a:NetworkVector, y:Double):Double = sum(a.map(x => -y * scala.math.log(x) - (1-y)*scala.math.log(1-x)))
-     def delta(z:Double, a:Double, y:Double):Double = (a-y)
+     def delta(z:NetworkVector, a:NetworkVector, y:NetworkVector):NetworkVector = (a-y)
   }
   override def updateMiniBatch(batch: TrainingSet, eta: Double, lmbda:Double, n:Int): Unit = {
     var newB = biases.map(b => DenseVector.zeros[Double](b.length))
@@ -156,15 +156,14 @@ trait CrossEntropyCostNetwork extends network{
         case (b, w) => {
           val z = w * activation + b
           activation = sigmoid(z)
-
           (z, activation)
         }
       })
       .unzip
-
     activations = x :: activations
 
-    var delta = costDerivative(activations.last, y) *:* sigmoidPrime(zs.last)
+    //var delta = costDerivative(activations.last, y) *:* sigmoidPrime(zs.last)
+    var delta = crossEntropyCost.delta(zs.last, activations.last, y)
 
     newB(newB.length - 1) = delta
     newW(newW.length - 1) = delta * activations(activations.length - 2).t
@@ -184,7 +183,7 @@ trait CrossEntropyCostNetwork extends network{
 trait QuadraticCostNetwork extends network {
   object quadraticCost extends costFunction {
     def fn(a:NetworkVector, y:Double):Double = 0.5 * scala.math.pow(breeze.linalg.norm(a), 2)
-    def delta(z:Double, a:Double, y:Double):Double = (a-y) * sigmoidPrime(z)
+    def delta(z:NetworkVector, a:NetworkVector, y:NetworkVector):NetworkVector = (a-y) * sigmoidPrime(z)
   }
 
 }
