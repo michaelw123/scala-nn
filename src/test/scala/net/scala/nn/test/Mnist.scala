@@ -12,7 +12,7 @@ import net.scala.nn.{CrossEntropyCostNetwork, network}
 object Mnist extends App {
 
   private def loadLabels(file:String) = {
-    val stream = getClass.getResourceAsStream("/train-labels-idx1-ubyte")
+    val stream = getClass.getResourceAsStream(file)
     val dataStream  = new DataInputStream(stream)
     val labels = ListBuffer.empty[DenseVector[Double]]
 
@@ -54,14 +54,10 @@ object Mnist extends App {
     images
 
   }
-  val mnistFiles =("train" -> "t10k-images-idx3-ubyte",
-                    "train-label" -> "t10k-labels-idx1-ubyte",
-                    "test" -> "train-images-idx3-ubyte",
-                    "test-label" -> "train-labels-idx1-ubyte")
   val labels = loadLabels("/train-labels-idx1-ubyte")
-  val images = loadImages("/t10k-images-idx3-ubyte")
-  val testlabels = loadLabels("/train-labels-idx1-ubyte")
-  val testimages = loadImages("/train-images-idx3-ubyte")
+  val images = loadImages("/train-images-idx3-ubyte")
+  val testlabels = loadLabels("/t10k-labels-idx1-ubyte")
+  val testimages = loadImages("/t10k-images-idx3-ubyte")
 
 
   val net = new network(List(784, 40, 25, 10))
