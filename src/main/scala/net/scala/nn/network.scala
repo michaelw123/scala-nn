@@ -49,10 +49,13 @@ object sigmoidPrime extends UFunc with MappingUFunc {
 
        miniBatches.foreach(b => updateMiniBatch(b, eta, 5.0, trainingData.size))
 
+       val acc = accuracy(shuffledTrainingData)
+
        testData match {
          case Some(d) => println(s"Epoch $x: ${evaluate(d)} / ${d.length}")
          case None => println(s"Epoch $x complete")
        }
+       println(s"accuracy: ${acc}:/ ${shuffledTrainingData.length}")
      }
    }
    def updateMiniBatch(batch: TrainingSet, eta: Double, lmbta:Double = 0.0, n:Int = 0): Unit = {
@@ -123,6 +126,10 @@ object sigmoidPrime extends UFunc with MappingUFunc {
 
      result
    }
+   def accuracy(data:TrainingSet):Int = {
+     val r = data.map( x => (argmax(feedForward(x._1)), argmax(x._2)))
+     r.count(x => x._1 == x._2)
+   }
 }
 trait CrossEntropyCostNetwork extends network{
    object crossEntropyCost extends costFunction {
@@ -190,9 +197,13 @@ trait QuadraticCostNetwork extends network {
 trait trainingCostMonitoring extends network {
 
 }
-trait trainingAccuracyMonitoring extends network {
-
-}
+//trait trainingAccuracyMonitoring extends network {
+//  def accuracy(data:TrainingSet):Int = {
+//    val r = data.map( x => (argmax(feedForward(x._1)), argmax(x._2)))
+//    r.count(x => x._1 == x._2)
+//  }
+//
+//}
 trait evaluationCostMonitoring extends network {
 
 }
