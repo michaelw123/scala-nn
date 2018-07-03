@@ -16,15 +16,14 @@ object Mnist extends App {
     val dataStream  = new DataInputStream(stream)
     val labels = ListBuffer.empty[DenseVector[Double]]
 
-    println(dataStream.readInt)
+    println(s"magic number: ${dataStream.readInt}")
     val count = dataStream.readInt() //skip  magic number
-    println(count)
+    println(s"label count=${count}")
 
     for (c <- 0 until count) {
       val label = dataStream.readByte()
       labels += DenseVector.tabulate[Double](10)({ i => if (i == label) 1.0 else 0.0 })
     }
-    println(labels.toList)
     dataStream.close()
     labels
   }
@@ -32,7 +31,7 @@ object Mnist extends App {
     val imageStream = getClass.getResourceAsStream(file)
     val imageDataStream  = new DataInputStream(imageStream)
     val images = ListBuffer.empty[DenseVector[Double]]
-    println(imageDataStream.readInt()) //skip magic number
+    println(s"magic number: ${imageDataStream.readInt}") //skip magic number
 
     val imageCount = imageDataStream.readInt()
     val height = imageDataStream.readInt()
@@ -52,7 +51,6 @@ object Mnist extends App {
     //println(images.toList)
     imageDataStream.close
     images
-
   }
   val labels = loadLabels("/train-labels-idx1-ubyte")
   val images = loadImages("/train-images-idx3-ubyte")
@@ -60,9 +58,10 @@ object Mnist extends App {
   val testimages = loadImages("/t10k-images-idx3-ubyte")
 
 
-  val net = new network(List(784, 40, 25, 10))
-  net.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, Option(testimages.toList.zip(testlabels.toList)))
-
-  //val net1 = new network(List(784, 40, 25, 10)) with CrossEntropyCostNetwork
-  //net1.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, Option(testimages.toList.zip(testlabels.toList)))
+  //val net = new network(List(784, 40, 25, 10))
+  //net.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, Option(testimages.toList.zip(testlabels.toList)))
+  val (validationLabels, trainingLabels) = labels.splitAt(1000)
+  val (validationImages, trainingImages) = images.splitAt(1000)
+  val net1 = new network(List(784, 40, 25, 10)) with CrossEntropyCostNetwork
+  net1.SGD(images.toList.zip(labels.toList), 30, 10, 0.1, Option(testimages.toList.zip(testlabels.toList)))
 }
