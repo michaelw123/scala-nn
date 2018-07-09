@@ -14,7 +14,9 @@ object sigmoidPrime extends UFunc with MappingUFunc {
   implicit object sigmoidImplDouble extends Impl[Double, Double] {
     def apply(x: Double) = sigmoid(x) * (1d - sigmoid(x))
   }
-
+//  implicit object reluImpDouble extends Impl[Double, Double] {
+//    def apply(x: Double) = relu(x) * (1d - relu(x))
+//  }
 }
 
  class network(private val sizes:List[Int]) {
@@ -210,4 +212,21 @@ trait evaluationCostMonitoring extends network {
 trait evaluationAccuracyMonitoring extends network {
 
 }
+class Layer(val batchSize:Int, val actiovation: Double => Double) {
+  def size:Int = 0
+}
+trait FullyConnectedLayer extends Layer {
 
+}
+trait ConvPoolLayer extends Layer {
+
+}
+trait SoftmaxLayer  extends Layer {
+
+}
+trait CnnNetwork extends network{
+
+}
+object CnnNetwork{
+  def apply[L <: Layer](layers:Array[L]):network = new network(layers.map(l => l.batchSize).toList)
+}

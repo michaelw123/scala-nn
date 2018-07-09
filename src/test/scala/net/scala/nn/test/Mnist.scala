@@ -63,5 +63,5 @@ object Mnist extends App {
   val (validationLabels, trainingLabels) = labels.splitAt(1000)
   val (validationImages, trainingImages) = images.splitAt(1000)
   val net1 = new network(List(784, 40, 25, 10)) with CrossEntropyCostNetwork
-  net1.SGD(images.toList.zip(labels.toList), 30, 10, 0.1, Option(testimages.toList.zip(testlabels.toList)))
+  net1.SGD(images.toList.zip(labels.toList), 30, 10, 0.025, Option(testimages.toList.zip(testlabels.toList)))
 }
