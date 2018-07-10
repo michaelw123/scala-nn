@@ -58,10 +58,10 @@ object Mnist extends App {
   val testimages = loadImages("/t10k-images-idx3-ubyte")
 
 
-  //val net = new network(List(784, 40, 25, 10))
-  //net.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, Option(testimages.toList.zip(testlabels.toList)))
-  val (validationLabels, trainingLabels) = labels.splitAt(1000)
-  val (validationImages, trainingImages) = images.splitAt(1000)
-  val net1 = new network(List(784, 40, 25, 10)) with CrossEntropyCostNetwork
-  net1.SGD(images.toList.zip(labels.toList), 30, 10, 0.025, Option(testimages.toList.zip(testlabels.toList)))
+  val net = new network(List(784, 40, 25, 10))
+  net.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, Option(testimages.toList.zip(testlabels.toList)))
+//  val (validationLabels, trainingLabels) = labels.splitAt(1000)
+//  val (validationImages, trainingImages) = images.splitAt(1000)
+//  val net1 = new network(List(784, 40, 25, 10)) with CrossEntropyCostNetwork
+//  net1.SGD(images.toList.zip(labels.toList), 30, 10, 0.025, Option(testimages.toList.zip(testlabels.toList)))
 }
