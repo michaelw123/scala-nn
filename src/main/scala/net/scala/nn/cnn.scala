@@ -88,20 +88,56 @@ object cnn {
       }
     }
     def updateMiniBatch(batch: TrainingSet, eta: Double, lmbta:Double = 0.0, n:Int = 0): Unit = {
-      var newB = layers.map(b => DenseVector.zeros[Double](b.length))
-      var newW = weights.map(w => DenseMatrix.zeros[Double](w.rows, w.cols))
+      var newB = layers.map(l => DenseVector.zeros[Double](l.b.length))
+      var newW = layers.map(l => DenseMatrix.zeros[Double](l.w.rows, l.w.cols))
 
       batch.foreach({
         case (x, y) => {
           val (deltaB, deltaW) = backprop(x, y)
-
           newB = newB.zip(deltaB).map({ case (nb, db) => nb + db })
           newW = newW.zip(deltaW).map({ case (nw, dw) => nw + dw })
 
         }
       })
-      biases = biases.zip(newB).map({ case (b, nb) => b - (eta / batch.length) * nb })
-      weights = weights.zip(newW).map({ case (w, nw) => w - (eta / batch.length) * nw })
+      layers.zip(newB).map({case (l, nb) => l.b = l.b - (eta / batch.length) * nb})
+      layers.zip(newW).map({case (l, nw) => l.w = l.w - (eta / batch.length) * nw})
+    }
+    def backprop(x: NetworkVector, y: NetworkVector): (List[NetworkVector], List[NetworkMatrix]) = {
+      var newB = layers.map(l => DenseVector.zeros[Double](l.b.length))
+      var newW = layers.map(l => DenseMatrix.zeros[Double](l.w.rows, l.w.cols))
+
+
+      var activation = x
+
+      var (zs, activations) = biases
+        .zip(weights)
+        .map({
+          case (b, w) => {
+            val z = w * activation + b
+            activation = sigmoid(z)
+
+            (z, activation)
+          }
+        })
+        .unzip
+
+      activations = x :: activations
+
+      var delta = costDerivative(activations.last, y) *:* sigmoidPrime(zs.last)
+
+      newB(newB.length - 1) = delta
+      newW(newW.length - 1) = delta * activations(activations.length - 2).t
+
+      for (l <- 2 until numLayers) {
+        val z = zs(zs.length - l)
+        val sp = sigmoidPrime(z)
+        delta = (weights(weights.length - l + 1).t * delta) *:* sp
+
+        newB(newB.length - l) = delta
+        newW(newW.length - l) = delta * activations(activations.length - l - 1).t
+      }
+
+      (newB.toList, newW.toList)
     }
   }
 
