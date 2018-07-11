@@ -106,20 +106,14 @@ object cnn {
       var newB = layers.map(l => DenseVector.zeros[Double](l.b.length))
       var newW = layers.map(l => DenseMatrix.zeros[Double](l.w.rows, l.w.cols))
 
-
       var activation = x
 
-      var (zs, activations) = biases
-        .zip(weights)
-        .map({
-          case (b, w) => {
-            val z = w * activation + b
-            activation = sigmoid(z)
-
-            (z, activation)
-          }
-        })
-        .unzip
+      var (zs, activations) = layers.map(l => {
+        val z = l.w * activation + l.b
+        activation = sigmoid(z)
+        (z, activation)
+      }).unzip
+      activations = x :: activations
 
       activations = x :: activations
 
