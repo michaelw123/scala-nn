@@ -73,18 +73,14 @@ object cnn {
 
       for (x <- 0 until epochs) {
         shuffledTrainingData = Random.shuffle(shuffledTrainingData)
-
         val miniBatches = shuffledTrainingData.grouped(miniBatchSize).toList
-
         miniBatches.foreach(b => updateMiniBatch(b, eta, 5.0, trainingData.size))
-
-        val acc = accuracy(shuffledTrainingData)
-
-        testData match {
-          case Some(d) => println(s"Epoch $x: ${evaluate(d)} / ${d.length}")
-          case None => println(s"Epoch $x complete")
-        }
-        println(s"accuracy: ${acc}:/ ${shuffledTrainingData.length}")
+//        val acc = accuracy(shuffledTrainingData)
+//        testData match {
+//          case Some(d) => println(s"Epoch $x: ${evaluate(d)} / ${d.length}")
+//          case None => println(s"Epoch $x complete")
+//        }
+//        println(s"accuracy: ${acc}:/ ${shuffledTrainingData.length}")
       }
     }
     def updateMiniBatch(batch: TrainingSet, eta: Double, lmbta:Double = 0.0, n:Int = 0): Unit = {
@@ -96,12 +92,13 @@ object cnn {
           val (deltaB, deltaW) = backprop(x, y)
           newB = newB.zip(deltaB).map({ case (nb, db) => nb + db })
           newW = newW.zip(deltaW).map({ case (nw, dw) => nw + dw })
-
         }
       })
-      layers.zip(newB).map({case (l, nb) => l.b = l.b - (eta / batch.length) * nb})
-      layers.zip(newW).map({case (l, nw) => l.w = l.w - (eta / batch.length) * nw})
-    }
+      layers.zip(newB).zip(newW).map({case ((l, nb), nw) =>
+        l.b = l.b - (eta / batch.length) * nb
+        l.w = l.w - (eta / batch.length) * nw
+      })
+     }
     def backprop(x: NetworkVector, y: NetworkVector): (List[NetworkVector], List[NetworkMatrix]) = {
       var newB = layers.map(l => DenseVector.zeros[Double](l.b.length))
       var newW = layers.map(l => DenseMatrix.zeros[Double](l.w.rows, l.w.cols))
@@ -115,23 +112,21 @@ object cnn {
       }).unzip
       activations = x :: activations
 
-      activations = x :: activations
-
       var delta = costDerivative(activations.last, y) *:* sigmoidPrime(zs.last)
 
-      newB(newB.length - 1) = delta
-      newW(newW.length - 1) = delta * activations(activations.length - 2).t
+      layers.last.b = delta
+      layers.last.w = delta * activations(activations.length - 2).t
 
-      for (l <- 2 until numLayers) {
-        val z = zs(zs.length - l)
+      val (b, w) = layers.tail.zip(newB.tail).zip(activations.reverse.tail).map( {case ((l, nb), a)  =>
+        val z = zs.last
         val sp = sigmoidPrime(z)
-        delta = (weights(weights.length - l + 1).t * delta) *:* sp
-
-        newB(newB.length - l) = delta
-        newW(newW.length - l) = delta * activations(activations.length - l - 1).t
-      }
-
-      (newB.toList, newW.toList)
+        delta = l.w.t * delta *:* sp
+        (delta, delta * a.t)
+      }).unzip
+      ((newB.head :: b).toList, (newW.head :: w).toList)
+    }
+    def costDerivative(outputActivations: NetworkVector, y: NetworkVector): NetworkVector = {
+      outputActivations - y
     }
   }
 

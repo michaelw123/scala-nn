@@ -5,6 +5,7 @@ import java.io.DataInputStream
 
 import breeze.linalg.{DenseMatrix, DenseVector}
 import net.scala.nn.{CrossEntropyCostNetwork, network}
+import net.scala.nn.cnn._
 
 /**
   * Created by wangmich on 06/26/2018.
@@ -52,16 +53,20 @@ object Mnist extends App {
     imageDataStream.close
     images
   }
+  def sigmoid (z:Double):Double = 1d/(1d+scala.math.exp(-z))
   val labels = loadLabels("/train-labels-idx1-ubyte")
   val images = loadImages("/train-images-idx3-ubyte")
   val testlabels = loadLabels("/t10k-labels-idx1-ubyte")
   val testimages = loadImages("/t10k-images-idx3-ubyte")
 
 
-  val net = new network(List(784, 40, 25, 10))
-  net.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, Option(testimages.toList.zip(testlabels.toList)))
+//  val net = new network(List(784, 40, 25, 10))
+//  net.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, Option(testimages.toList.zip(testlabels.toList)))
 //  val (validationLabels, trainingLabels) = labels.splitAt(1000)
 //  val (validationImages, trainingImages) = images.splitAt(1000)
 //  val net1 = new network(List(784, 40, 25, 10)) with CrossEntropyCostNetwork
 //  net1.SGD(images.toList.zip(labels.toList), 30, 10, 0.025, Option(testimages.toList.zip(testlabels.toList)))
+
+  val net = CnnNetwork(List(new FullyConnectedLayer(784, 30, sigmoid, 0), new FullyConnectedLayer(30, 10, sigmoid, 0)).toArray)
+  net.SGD(images.toList.zip(labels.toList), 30, 10, 3.0, Option(testimages.toList.zip(testlabels.toList)))
 }

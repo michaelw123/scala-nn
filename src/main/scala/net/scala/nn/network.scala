@@ -101,13 +101,13 @@ object sigmoidPrime extends UFunc with MappingUFunc {
      newB(newB.length - 1) = delta
      newW(newW.length - 1) = delta * activations(activations.length - 2).t
 
-     for (l <- 2 until numLayers) {
-       val z = zs(zs.length - l)
+     for (layer <- 2 until numLayers) {
+       val z = zs(zs.length - layer)
        val sp = sigmoidPrime(z)
-       delta = (weights(weights.length - l + 1).t * delta) *:* sp
+       delta = (weights(weights.length - layer + 1).t * delta) *:* sp
 
-       newB(newB.length - l) = delta
-       newW(newW.length - l) = delta * activations(activations.length - l - 1).t
+       newB(newB.length - layer) = delta
+       newW(newW.length - layer) = delta * activations(activations.length - layer - 1).t
      }
 
      (newB.toList, newW.toList)
