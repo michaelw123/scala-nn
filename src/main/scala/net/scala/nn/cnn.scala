@@ -18,7 +18,7 @@ object cnn {
     val in: Int
     val out: Int
     var b = DenseVector.rand(out, Rand.gaussian)
-    var w = DenseMatrix.rand(in, out, Rand.gaussian)
+    var w = DenseMatrix.rand(out, in, Rand.gaussian)
   }
 
   trait Dropout {
