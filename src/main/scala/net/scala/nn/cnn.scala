@@ -131,7 +131,7 @@ object cnn {
   }
 
   object CnnNetwork {
-    def apply[L <: Layer](layers: Array[L]): CnnNetwork = new CnnNetwork{ layers.map(l => l.in).toList }
+    def apply[L <: Layer](l: Array[L]): CnnNetwork = new CnnNetwork{ layers = l.toList }
   }
 
 }
