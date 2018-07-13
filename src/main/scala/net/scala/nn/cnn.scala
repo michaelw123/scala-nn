@@ -54,16 +54,21 @@ object cnn {
     val width = 0
   }
 
-  class FullyConnectedLayer(val in: Int, val out: Int, val actiovation: Double => Double, val dropout: Double) extends Layer with Activation with Dropout {
-
+  class FullyConnectedLayer(val in: Int, val out: Int, val actiovation: Double => Double, val dropout: Double)
+    extends Layer
+      with Activation
+      with Dropout {
   }
 
-  class SoftmaxLayer(val in: Int, val out: Int, val dropout: Double) extends Layer with Dropout {
-
+  class SoftmaxLayer(val in: Int, val out: Int, val dropout: Double) extends
+    Layer with Dropout {
   }
 
-  class ConvPoolLayer(val in: Int, val out: Int, val dropout: Double, val poolx: Int, val pooly: Int, val filter: filterShape, val image: imageShape) extends Layer with Dropout with Convolution with Pool {
-
+  class ConvPoolLayer(val in: Int, val out: Int, val dropout: Double, val poolx: Int, val pooly: Int, val filter: filterShape, val image: imageShape)
+    extends Layer
+      with Dropout
+      with Convolution
+      with Pool {
   }
 
   class CnnNetwork {
