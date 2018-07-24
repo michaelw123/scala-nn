@@ -15,8 +15,8 @@ object cnn {
   type TrainingSet = List[(NetworkVector, NetworkVector)]
 
   trait Layer {
-    val in: Int
-    val out: Int
+    val in: Int  //row
+    val out: Int  //col
     var b = DenseVector.rand(out, Rand.gaussian)
     var w = DenseMatrix.rand(out, in, Rand.gaussian)
   }
@@ -121,16 +121,16 @@ object cnn {
 
       newB(newB.length - 1) = delta
       newW(newW.length - 1) = delta * activations(activations.length - 2).t
-      //layers.last.b = delta
-      //layers.last.w = delta * activations(activations.length - 2).t
+//      layers.last.b = delta
+//      layers.last.w = delta * activations(activations.length - 2).t
 
-      val (b, w) = layers.tail.zip(newB.tail).zip(activations.reverse.tail).map( {case ((l, nb), a)  =>
-        val z = zs.last
-        val sp = sigmoidPrime(z)
+      val (b, w) = layers.dropRight(1).reverse.zip(zs.dropRight(1).reverse).zip(activations.dropRight(1).reverse).map( {case ((l, nb), a)  =>
+        val sp = sigmoidPrime(nb)
         delta = l.w.t * delta *:* sp
         (delta, delta * a.t)
       }).unzip
-      ((newB.head :: b).toList, (newW.head :: w).toList)
+
+      ((newB.last :: b).toList.reverse, (newW.last :: w).toList.reverse)
     }
     def costDerivative(outputActivations: NetworkVector, y: NetworkVector): NetworkVector = {
       outputActivations - y

@@ -26,7 +26,7 @@ object Mnist extends App {
       labels += DenseVector.tabulate[Double](10)({ i => if (i == label) 1.0 else 0.0 })
     }
     dataStream.close()
-    labels
+    labels.toList
   }
   private def loadImages(file:String) = {
     val imageStream = getClass.getResourceAsStream(file)
