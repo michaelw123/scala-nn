@@ -51,7 +51,7 @@ object Mnist extends App {
 
     //println(images.toList)
     imageDataStream.close
-    images
+    images.toList
   }
   def sigmoid (z:Double):Double = 1d/(1d+scala.math.exp(-z))
   val labels = loadLabels("/train-labels-idx1-ubyte")

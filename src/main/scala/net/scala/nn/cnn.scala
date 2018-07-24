@@ -105,8 +105,8 @@ object cnn {
       })
      }
     def backprop(x: NetworkVector, y: NetworkVector): (List[NetworkVector], List[NetworkMatrix]) = {
-      var newB = layers.map(l => DenseVector.zeros[Double](l.b.length))
-      var newW = layers.map(l => DenseMatrix.zeros[Double](l.w.rows, l.w.cols))
+      var newB = layers.map(l => DenseVector.zeros[Double](l.b.length)).toArray
+      var newW = layers.map(l => DenseMatrix.zeros[Double](l.w.rows, l.w.cols)).toArray
 
       var activation = x
 
@@ -119,8 +119,10 @@ object cnn {
 
       var delta = costDerivative(activations.last, y) *:* sigmoidPrime(zs.last)
 
-      layers.last.b = delta
-      layers.last.w = delta * activations(activations.length - 2).t
+      newB(newB.length - 1) = delta
+      newW(newW.length - 1) = delta * activations(activations.length - 2).t
+      //layers.last.b = delta
+      //layers.last.w = delta * activations(activations.length - 2).t
 
       val (b, w) = layers.tail.zip(newB.tail).zip(activations.reverse.tail).map( {case ((l, nb), a)  =>
         val z = zs.last
