@@ -171,8 +171,8 @@ trait CrossEntropyCostNetwork extends network{
       .unzip
     activations = x :: activations
 
-    //var delta = costDerivative(activations.last, y) *:* sigmoidPrime(zs.last)
-    var delta = crossEntropyCost.delta(zs.last, activations.last, y)
+    var delta = costDerivative(activations.last, y) *:* sigmoidPrime(zs.last)
+    //var delta = crossEntropyCost.delta(zs.last, activations.last, y)
 
     newB(newB.length - 1) = delta
     newW(newW.length - 1) = delta * activations(activations.length - 2).t

@@ -124,7 +124,7 @@ object cnn {
 //      layers.last.b = delta
 //      layers.last.w = delta * activations(activations.length - 2).t
 
-      val (b, w) = layers.dropRight(1).reverse.zip(zs.dropRight(1).reverse).zip(activations.dropRight(1).reverse).map( {case ((l, nb), a)  =>
+      val (b, w) = layers.reverse.zip(zs.dropRight(1).reverse).zip(activations.dropRight(1).reverse).map( {case ((l, nb), a)  =>
         val sp = sigmoidPrime(nb)
         delta = l.w.t * delta *:* sp
         (delta, delta * a.t)
