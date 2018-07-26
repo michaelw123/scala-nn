@@ -1,6 +1,6 @@
 package net.scala.nn
 
-import breeze.linalg.{DenseMatrix, DenseVector}
+import breeze.linalg.{DenseMatrix, DenseVector,argmax}
 import breeze.numerics.sigmoid
 import breeze.stats.distributions.Rand
 
@@ -77,15 +77,16 @@ object cnn {
       var shuffledTrainingData = trainingData
 
       for (x <- 0 until epochs) {
+        println(s"epoch = ${x}")
         shuffledTrainingData = Random.shuffle(shuffledTrainingData)
         val miniBatches = shuffledTrainingData.grouped(miniBatchSize).toList
         miniBatches.foreach(b => updateMiniBatch(b, eta, 5.0, trainingData.size))
-//        val acc = accuracy(shuffledTrainingData)
-//        testData match {
-//          case Some(d) => println(s"Epoch $x: ${evaluate(d)} / ${d.length}")
-//          case None => println(s"Epoch $x complete")
-//        }
-//        println(s"accuracy: ${acc}:/ ${shuffledTrainingData.length}")
+       val acc = accuracy(shuffledTrainingData)
+        testData match {
+          case Some(d) => println(s"Epoch $x: ${evaluate(d)} / ${d.length}")
+          case None => println(s"Epoch $x complete")
+        }
+        println(s"accuracy: ${acc}:/ ${shuffledTrainingData.length}")
       }
     }
     def updateMiniBatch(batch: TrainingSet, eta: Double, lmbta:Double = 0.0, n:Int = 0): Unit = {
@@ -124,19 +125,35 @@ object cnn {
 //      layers.last.b = delta
 //      layers.last.w = delta * activations(activations.length - 2).t
 
-      val (b, w) = layers.reverse.zip(zs.dropRight(1).reverse).zip(activations).map( {case ((l, nb), a)  =>
+      val (b, w) = layers.reverse.zip(zs.dropRight(1).reverse).zip(activations.dropRight(2).reverse).map( {case ((l, nb), a)  =>
         val sp = sigmoidPrime(nb)
         delta = l.w.t * delta *:* sp
         val x = delta * a.t
         (delta, delta * a.t)
       }).unzip
 
-      val ret = ((newB.last :: b).toList.reverse, (newW.last :: w).toList.reverse)
+      val ret = ((newB.last::b).reverse, (newW.last::w).reverse)
       ret
 
     }
     def costDerivative(outputActivations: NetworkVector, y: NetworkVector): NetworkVector = {
       outputActivations - y
+    }
+    def accuracy(data:TrainingSet):Int = {
+      val r = data.map( x => (argmax(feedForward(x._1)), argmax(x._2)))
+      r.count(x => x._1 == x._2)
+    }
+    def feedForward(activation: NetworkVector): NetworkVector = {
+      var result = activation
+      layers.foreach(l => {
+        result = sigmoid(l.w* result + l.b)
+      })
+      result
+    }
+    def evaluate(testData: TrainingSet): Int = {
+      testData
+        .map({ case (x, y) => (argmax(feedForward(x)), argmax(y)) })
+        .count { case (x, y) => x == y }
     }
   }
 
