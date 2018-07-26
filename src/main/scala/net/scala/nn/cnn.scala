@@ -124,13 +124,16 @@ object cnn {
 //      layers.last.b = delta
 //      layers.last.w = delta * activations(activations.length - 2).t
 
-      val (b, w) = layers.reverse.zip(zs.dropRight(1).reverse).zip(activations.dropRight(1).reverse).map( {case ((l, nb), a)  =>
+      val (b, w) = layers.reverse.zip(zs.dropRight(1).reverse).zip(activations).map( {case ((l, nb), a)  =>
         val sp = sigmoidPrime(nb)
         delta = l.w.t * delta *:* sp
+        val x = delta * a.t
         (delta, delta * a.t)
       }).unzip
 
-      ((newB.last :: b).toList.reverse, (newW.last :: w).toList.reverse)
+      val ret = ((newB.last :: b).toList.reverse, (newW.last :: w).toList.reverse)
+      ret
+
     }
     def costDerivative(outputActivations: NetworkVector, y: NetworkVector): NetworkVector = {
       outputActivations - y
